@@ -40,7 +40,20 @@ const findNpmConfig = () => {
 };
 
 beforeAll(() => {
-  const fileDependency = `file:${packageRoot.replaceAll("\\", "/")}`;
+  if (!packageManager) throw new Error("Run the consumer test through npm or Yarn");
+  const tarball = path.join(fixtureRoot, "plugin.tgz");
+  if (path.basename(packageManager).startsWith("npm")) {
+    const packed = JSON.parse(execFileSync(process.execPath, [packageManager,
+      "pack", "--ignore-scripts", "--json", "--pack-destination", fixtureRoot], {
+      cwd: packageRoot, encoding: "utf8", timeout: 180_000,
+    }));
+    fs.renameSync(path.join(fixtureRoot, packed[0].filename), tarball);
+  } else {
+    execFileSync(process.execPath, [packageManager, "pack", "--filename", tarball], {
+      cwd: packageRoot, encoding: "utf8", timeout: 180_000,
+    });
+  }
+  const fileDependency = `file:${tarball.replaceAll("\\", "/")}`;
   const callerNpmConfig = findNpmConfig();
   if (callerNpmConfig) {
     fs.copyFileSync(callerNpmConfig, path.join(fixtureRoot, ".npmrc"));
@@ -78,7 +91,7 @@ afterAll(() => {
   fs.rmSync(fixtureRoot, { recursive: true, force: true });
 });
 
-describe("installed file dependency consumer", () => {
+describe("installed package tarball consumer", () => {
   it("builds through only the package public interfaces", () => {
     const output = runPackageManager(["run", "build"]);
     const reportPath = path.join(fixtureRoot, "dist/naive-style-isolation-audit.json");
