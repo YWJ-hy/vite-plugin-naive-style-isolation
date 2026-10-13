@@ -1,0 +1,10 @@
+node_modules/
+coverage/
+.vitest/
+artifacts/
+.dist-check-*/
+*.log
+
+# dist is the installed package entry and must be committed with the source snapshot.
+!dist/
+!dist/**
