@@ -41,7 +41,7 @@ describe("package exports", () => {
       .map(file => file.replaceAll("\\", "/"))
       .sort();
 
-    expect(dist).not.toContain("iho-expense-ui-naive-ui-style-isolation");
+    expect(dist).not.toContain(packageRoot.replaceAll("\\", "/"));
     expect(dist).not.toMatch(/[A-Z]:\/projects\//i);
     expect(maps).toEqual([]);
     expect(declarations).toEqual(["index.d.ts", "internal/runtime-core.d.ts", "runtime.d.ts"]);

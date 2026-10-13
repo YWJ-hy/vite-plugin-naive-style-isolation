@@ -19,8 +19,8 @@ describe("production Naive UI dependency audit", () => {
 
   it("rejects a second runtime even when it comes from a controlled dependency", () => {
     const nestedRuntime: NaiveUiRuntimeModule = {
-      id: "C:/repo/node_modules/cnhis-design-vue/node_modules/naive-ui/es/button/index.mjs",
-      packageRoot: "C:/repo/node_modules/cnhis-design-vue/node_modules/naive-ui",
+      id: "C:/repo/node_modules/example-component-library/node_modules/naive-ui/es/button/index.mjs",
+      packageRoot: "C:/repo/node_modules/example-component-library/node_modules/naive-ui",
       packageName: "naive-ui",
       version: "2.43.2",
       testAlias: false,

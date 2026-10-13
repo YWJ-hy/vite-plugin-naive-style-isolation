@@ -24,12 +24,12 @@ describe("Naive UI style isolation shared contract", () => {
   });
 
   it("adds the project namespace once while retaining consumer namespaces", () => {
-    expect(mergeNamespace("iho-his-expense-common", undefined)).toBe("iho-his-expense-common");
-    expect(mergeNamespace("iho-his-expense-common", "consumer-layer")).toBe(
-      "consumer-layer iho-his-expense-common",
+    expect(mergeNamespace("example-app", undefined)).toBe("example-app");
+    expect(mergeNamespace("example-app", "consumer-layer")).toBe(
+      "consumer-layer example-app",
     );
-    expect(mergeNamespace("iho-his-expense-common", "consumer-layer iho-his-expense-common")).toBe(
-      "consumer-layer iho-his-expense-common",
+    expect(mergeNamespace("example-app", "consumer-layer example-app")).toBe(
+      "consumer-layer example-app",
     );
   });
 });

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const cliPath = fileURLToPath(new URL("../dist/cli.js", import.meta.url));
-const namespace = "fixture-expense-app";
+const namespace = "fixture-app";
 let fixtureRoot = "";
 
 const write = (relativePath: string, source: string) => {

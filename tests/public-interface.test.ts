@@ -17,7 +17,7 @@ describe("Vite plugin public interface", () => {
 
   it("adds isolation while preserving the consumer Vite configuration", async () => {
     const plugin = naiveStyleIsolation({
-      namespace: "consumer-expense-app",
+      namespace: "consumer-app",
       root: process.cwd(),
       strict: false,
     });
@@ -74,7 +74,7 @@ describe("Vite plugin public interface", () => {
     expect(merged.build?.sourcemap).toBe(true);
 
     const duplicate = naiveStyleIsolation({
-      namespace: "consumer-expense-app",
+      namespace: "consumer-app",
       root: process.cwd(),
       strict: false,
     });
@@ -85,7 +85,7 @@ describe("Vite plugin public interface", () => {
 
   it("rewrites only createDiscreteApi imports and leaves normal Naive UI imports optimizable", () => {
     const plugin = naiveStyleIsolation({
-      namespace: "consumer-expense-app",
+      namespace: "consumer-app",
       root: process.cwd(),
       strict: false,
     });
@@ -120,14 +120,14 @@ describe("Vite plugin public interface", () => {
 
   it("leaves third-party JavaScript and optimizer configuration unchanged", async () => {
     const plugin = naiveStyleIsolation({
-      namespace: "consumer-expense-app",
+      namespace: "consumer-app",
       root: process.cwd(),
       strict: false,
     });
     const consumerConfig: UserConfig = {
       optimizeDeps: {
         include: ["existing-included"],
-        exclude: ["cnhis-design-vue"],
+        exclude: ["example-component-library"],
         esbuildOptions: { plugins: [existingEsbuildPlugin] },
       },
     };
@@ -144,8 +144,8 @@ describe("Vite plugin public interface", () => {
         "vite-plugin-naive-style-isolation/runtime",
       ]),
     );
-    expect(merged.optimizeDeps?.include).not.toContain("cnhis-design-vue");
-    expect(merged.optimizeDeps?.exclude).toContain("cnhis-design-vue");
+    expect(merged.optimizeDeps?.include).not.toContain("example-component-library");
+    expect(merged.optimizeDeps?.exclude).toContain("example-component-library");
     expect(merged.optimizeDeps?.esbuildOptions?.plugins).toEqual([existingEsbuildPlugin]);
 
     const transform = plugin.transform as (
@@ -155,7 +155,7 @@ describe("Vite plugin public interface", () => {
     expect(
       transform(
         'document.querySelector(".n-input");',
-        path.join(process.cwd(), "node_modules/cnhis-design-vue/es/input.js"),
+        path.join(process.cwd(), "node_modules/example-component-library/es/input.js"),
       ),
     ).toBeUndefined();
     expect(
@@ -166,14 +166,14 @@ describe("Vite plugin public interface", () => {
     ).toContain('from "virtual:naive-style-isolation/discrete-api"');
   });
 
-  it("builds without cnhis-design-vue installed", async () => {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "naive-style-isolation-no-cnhis-"));
+  it("builds without example-component-library installed", async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "naive-style-isolation-no-library-"));
     const write = (relativePath: string, source: string) => {
       const file = path.join(root, relativePath);
       fs.mkdirSync(path.dirname(file), { recursive: true });
       fs.writeFileSync(file, source);
     };
-    write("package.json", JSON.stringify({ name: "no-cnhis-fixture" }));
+    write("package.json", JSON.stringify({ name: "no-library-fixture" }));
     write(
       "node_modules/naive-ui/package.json",
       JSON.stringify({ name: "naive-ui", version: "2.44.1", module: "index.mjs" }),
@@ -183,7 +183,7 @@ describe("Vite plugin public interface", () => {
 
     try {
       const plugin = naiveStyleIsolation({
-        namespace: "no-cnhis-fixture",
+        namespace: "no-library-fixture",
         root,
       });
       await (plugin.config as Function)({}, { command: "build", mode: "production" });

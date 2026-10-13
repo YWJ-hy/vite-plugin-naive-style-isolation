@@ -76,7 +76,7 @@ beforeAll(() => {
   );
   write(
     "vite.config.js",
-    `import { defineConfig } from "vite";\nimport naiveStyleIsolation from "vite-plugin-naive-style-isolation";\nexport default defineConfig({ plugins: [naiveStyleIsolation({ namespace: "fixture-expense-app" })] });\n`,
+    `import { defineConfig } from "vite";\nimport naiveStyleIsolation from "vite-plugin-naive-style-isolation";\nexport default defineConfig({ plugins: [naiveStyleIsolation({ namespace: "fixture-app" })] });\n`,
   );
   write("index.html", '<div id="app"></div><script type="module" src="/src/main.js"></script>\n');
   write(
@@ -102,7 +102,7 @@ describe("installed package tarball consumer", () => {
       schemaVersion: 1,
       naiveUiVersion: "2.44.1",
       clsPrefix: "n-v2-44-1",
-      namespace: "fixture-expense-app",
+      namespace: "fixture-app",
       unknown: [],
     });
     expect(report.productionRuntimes).toHaveLength(1);

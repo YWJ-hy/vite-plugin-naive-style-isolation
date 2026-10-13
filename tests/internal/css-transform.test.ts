@@ -6,7 +6,7 @@ import {
 } from "../../src/internal/css-transform.js";
 
 const clsPrefix = "n-v2-44-1";
-const namespace = "iho-his-expense-common";
+const namespace = "example-app";
 
 const transform = async (css: string, from: string) => {
   const audit = {
@@ -29,19 +29,19 @@ describe("Naive UI selector PostCSS transform", () => {
       "C:/repo/src/date-picker.css",
     );
 
-    expect(css).toContain(":where(.iho-his-expense-common) .c-date-picker .n-v2-44-1-input");
-    expect(css).toContain(":where(.iho-his-expense-common) .n-v2-44-1-popover:hover");
+    expect(css).toContain(":where(.example-app) .c-date-picker .n-v2-44-1-input");
+    expect(css).toContain(":where(.example-app) .n-v2-44-1-popover:hover");
     expect(audit.cssClasses).toEqual(["n-input", "n-popover"]);
   });
 
   it("does not double-prefix, double-scope, or rewrite the known n-global residual", async () => {
     const { css } = await transform(
-      ".iho-his-expense-common .n-v2-44-1-button, .n-global { display: block }",
+      ".example-app .n-v2-44-1-button, .n-global { display: block }",
       "C:/repo/src/assets/style/global.less",
     );
 
-    expect(css).toContain(".iho-his-expense-common .n-v2-44-1-button");
-    expect(css).toContain(":where(.iho-his-expense-common) .n-global");
+    expect(css).toContain(".example-app .n-v2-44-1-button");
+    expect(css).toContain(":where(.example-app) .n-global");
     expect(css).not.toContain("n-v2-44-1-v2-44-1");
   });
 
@@ -52,7 +52,7 @@ describe("Naive UI selector PostCSS transform", () => {
     );
 
     expect(css).toContain(".n-v2-44-1-input[data-v-contract]");
-    expect(css).not.toContain(":where(.iho-his-expense-common)");
+    expect(css).not.toContain(":where(.example-app)");
   });
 
   it("leaves scoped deep selectors for Vue to scope after PostCSS", async () => {
@@ -62,7 +62,7 @@ describe("Naive UI selector PostCSS transform", () => {
     );
 
     expect(css).toContain(":deep(.n-v2-44-1-spin-container)");
-    expect(css).not.toContain(":where(.iho-his-expense-common)");
+    expect(css).not.toContain(":where(.example-app)");
   });
 
   it("keeps the project namespace global inside CSS Modules", async () => {
@@ -72,7 +72,7 @@ describe("Naive UI selector PostCSS transform", () => {
     );
 
     expect(css).toContain(
-      ":global(.iho-his-expense-common) .promise-drawer .n-v2-44-1-drawer-header__main",
+      ":global(.example-app) .promise-drawer .n-v2-44-1-drawer-header__main",
     );
   });
 
@@ -86,10 +86,10 @@ describe("Naive UI selector PostCSS transform", () => {
     expect(audit.cssClasses).toEqual([]);
   });
 
-  it("leaves cnhis-design-vue CSS unchanged without special handling", async () => {
+  it("leaves example-component-library CSS unchanged without special handling", async () => {
     const { css, audit } = await transform(
       ".c-date-picker .n-input { color: red }",
-      "C:/repo/node_modules/cnhis-design-vue/es/date-picker.css",
+      "C:/repo/node_modules/example-component-library/es/date-picker.css",
     );
 
     expect(css).toBe(".c-date-picker .n-input { color: red }");

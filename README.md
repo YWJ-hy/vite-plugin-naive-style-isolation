@@ -13,7 +13,6 @@
 | Vite             | `>=6 <7`               | `6.2.0`           |
 | Naive UI         | `>=2.43 <3`            | `2.44.1`          |
 
-
 ## 安装
 
 ```sh
@@ -34,7 +33,7 @@ import vue from "@vitejs/plugin-vue";
 import naiveStyleIsolation from "vite-plugin-naive-style-isolation";
 
 export default defineConfig({
-  plugins: [naiveStyleIsolation({ namespace: "billing-expense-app" }), vue()],
+  plugins: [naiveStyleIsolation({ namespace: "example-app" }), vue()],
 });
 ```
 
@@ -48,7 +47,6 @@ export default defineConfig({
 
 已有的 Less 内容、PostCSS 插件、`define`、alias、`optimizeDeps` 和 build 配置都会保留。若 PostCSS 只通过配置文件路径提供，插件无法证明可以安全合并，会明确报错而不是覆盖。
 
-
 可选参数：
 
 - `root`：命令执行目录不是消费项目根目录时显式指定项目根；
@@ -56,7 +54,6 @@ export default defineConfig({
 - `auditReport`：修改生产审计报告在构建目录中的相对路径。
 
 同一份 Vite 配置只能调用一次该插件；重复调用或参数冲突时会明确报错，防止第二套 hook 进入构建。
-
 
 ## Naive UI 多版本策略
 
@@ -116,14 +113,14 @@ pnpm 可以使用根配置中的 overrides：
 }
 ```
 
-版本号应替换为消费项目已经完成组件库契约、audit 和生产构建验证的实际版本。强制覆盖传递依赖前，应确认相关依赖声明的 peer dependency 范围兼容；不要为了让检查通过而强制使用不兼容版本。
+版本号应替换为消费项目已经完成运行时测试、audit 和生产构建验证的实际版本。强制覆盖传递依赖前，应确认相关依赖声明的 peer dependency 范围兼容；不要为了让检查通过而强制使用不兼容版本。
 
 重新安装后可以先查看依赖来源，再运行插件检查：
 
 ```sh
 yarn why naive-ui
-yarn naive-style-isolation doctor --namespace billing-expense-app
-yarn naive-style-isolation audit --namespace billing-expense-app --report artifacts/naive-style-isolation-audit.json
+yarn naive-style-isolation doctor --namespace example-app
+yarn naive-style-isolation audit --namespace example-app --report artifacts/naive-style-isolation-audit.json
 ```
 
 `naive-ui-legacy` 只是插件源码包运行双版本回归测试时使用的开发依赖。消费项目不需要安装、alias 或打包它。
@@ -135,7 +132,7 @@ yarn naive-style-isolation audit --namespace billing-expense-app --report artifa
 | 配置项              | 必须满足                                                                                          | 不要这样配置                                                                                |
 | ------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | 插件顺序            | 在 Vue 和自动导入插件之前调用一次 `naiveStyleIsolation({ namespace })`                            | 重复调用插件，或放到可能提前处理 Naive UI 源码的插件之后                                    |
-| `namespace`         | 使用稳定、项目唯一的单个 class，例如 `billing-expense-app`                                        | 包含点号、空格、随机值或随环境变化的后缀                                                    |
+| `namespace`         | 使用稳定、项目唯一的单个 class，例如 `example-app`                                        | 包含点号、空格、随机值或随环境变化的后缀                                                    |
 | 根 ConfigProvider   | 使用 `NAIVE_ROOT_CLASS` 和 `withNaiveConfigProviderProps()`，每棵独立 Vue 应用树都要配置          | 继续手工维护 `clsPrefix`、`namespace`、`inlineThemeDisabled`                                |
 | Naive UI 依赖       | 让生产依赖图只解析到一个已验证版本；存在传递依赖冲突时使用 `resolutions` 或对应包管理器 overrides | alias 到 `naive-ui-legacy`、测试版本，或同时安装多套生产 runtime                            |
 | `createDiscreteApi` | 从裸入口使用具名导入：`import { createDiscreteApi } from "naive-ui"`                              | namespace import、`export *` 或从 `naive-ui/...` 深路径导入                                 |
@@ -153,7 +150,7 @@ import { defineConfig } from "vite";
 import naiveStyleIsolation from "vite-plugin-naive-style-isolation";
 
 export default defineConfig({
-  plugins: [naiveStyleIsolation({ namespace: "billing-expense-app" }), vue()],
+  plugins: [naiveStyleIsolation({ namespace: "example-app" }), vue()],
 });
 ```
 
@@ -168,7 +165,7 @@ export default defineConfig({
   },
   define: {
     __NAIVE_STYLE_ISOLATION_VERSION__: '"2.44.1"',
-    __NAIVE_STYLE_ISOLATION_NAMESPACE__: '"billing-expense-app"',
+    __NAIVE_STYLE_ISOLATION_NAMESPACE__: '"example-app"',
   },
 });
 ```
@@ -177,11 +174,11 @@ export default defineConfig({
 
 ## Runtime 接入
 
-每棵独立 Vue 应用树的根节点都要使用 package runtime。业务主题、语言、placement 和 provider 属性会被保留：
+每棵独立 Vue 应用树的根节点都要使用 package runtime。应用主题、语言、placement 和 provider 属性会被保留：
 
 ```vue
 <template>
-  <n-config-provider id="expense-app" :class="NAIVE_ROOT_CLASS" v-bind="configProviderProps">
+  <n-config-provider id="example-app" :class="NAIVE_ROOT_CLASS" v-bind="configProviderProps">
     <n-message-provider v-bind="messageProviderProps">
       <n-notification-provider v-bind="notificationProviderProps">
         <router-view />
@@ -220,7 +217,7 @@ Runtime 还公开只读的 `NAIVE_UI_VERSION`、`NAIVE_UI_CLS_PREFIX`、`NAIVE_S
 这些值不是插件写死的：Naive UI 版本来自消费项目实际安装的依赖，namespace 来自 `naiveStyleIsolation({ namespace })`。例如消费项目安装 `naive-ui@2.44.1`，并配置：
 
 ```ts
-naiveStyleIsolation({ namespace: "billing-expense-app" });
+naiveStyleIsolation({ namespace: "example-app" });
 ```
 
 对应的 runtime 值为：
@@ -229,8 +226,8 @@ naiveStyleIsolation({ namespace: "billing-expense-app" });
 | -------------------------- | ----------------------- | ------------------------------------------ |
 | `NAIVE_UI_VERSION`         | `"2.44.1"`              | 消费项目实际使用的 Naive UI 版本           |
 | `NAIVE_UI_CLS_PREFIX`      | `"n-v2-44-1"`           | 传给 Naive UI ConfigProvider 的 class 前缀 |
-| `NAIVE_STYLE_NAMESPACE`    | `"billing-expense-app"` | Vite 插件配置的项目 namespace              |
-| `NAIVE_ROOT_CLASS`         | `"billing-expense-app"` | 应用根节点使用的 namespace class           |
+| `NAIVE_STYLE_NAMESPACE`    | `"example-app"` | Vite 插件配置的项目 namespace              |
+| `NAIVE_ROOT_CLASS`         | `"example-app"` | 应用根节点使用的 namespace class           |
 | `naiveClassName("button")` | `"n-v2-44-1-button"`    | 生成不带点号的完整 class 名                |
 | `naiveSelector("button")`  | `".n-v2-44-1-button"`   | 生成可传给 DOM 查询方法的 class selector   |
 
@@ -248,13 +245,13 @@ import {
 
 console.log(NAIVE_UI_VERSION); // "2.44.1"
 console.log(NAIVE_UI_CLS_PREFIX); // "n-v2-44-1"
-console.log(NAIVE_STYLE_NAMESPACE); // "billing-expense-app"
-console.log(NAIVE_ROOT_CLASS); // "billing-expense-app"
+console.log(NAIVE_STYLE_NAMESPACE); // "example-app"
+console.log(NAIVE_ROOT_CLASS); // "example-app"
 console.log(naiveClassName("button")); // "n-v2-44-1-button"
 document.querySelector(naiveSelector("button")); // 查询 .n-v2-44-1-button
 ```
 
-升级 Naive UI 或修改 namespace 后，这些值会随下一次 Vite 启动或构建更新，业务代码不应复制示例中的字符串常量。
+升级 Naive UI 或修改 namespace 后，这些值会随下一次 Vite 启动或构建更新，应用代码不应复制示例中的字符串常量。
 
 类型声明随 package 提供。直接导入公开接口即可获得类型，不要在消费项目中声明 package 内部编译常量。
 
@@ -266,7 +263,7 @@ document.querySelector(naiveSelector("button")); // 查询 .n-v2-44-1-button
 
 典型表现是：项目 selector 已正确编译为版本化前缀，但独立渲染树中的 Naive UI 组件仍使用默认 `.n-*` class，导致 selector 无法匹配，并重新引入不同 Naive UI 版本之间的 class 和 CSSR 冲突。
 
-消费项目可以提供一个中性的独立树根组件，在其内部使用 runtime helper 建立版本化 ConfigProvider。具体业务组件由 slot 提供，不需要插件知道它是弹层、遮罩还是其他内容：
+消费项目可以提供一个中性的独立树根组件，在其内部使用 runtime helper 建立版本化 ConfigProvider。具体应用组件由 slot 提供，不需要插件知道它是弹层、遮罩还是其他内容：
 
 ```vue
 <template>
@@ -311,7 +308,7 @@ export const { message, notification, dialog, modal } = createDiscreteApi(
 );
 ```
 
-消费项目已有的业务包装函数或全局变量可以继续保留，只要它们底层最终使用上述裸入口的 named import；插件不要求各系统采用统一的业务封装。禁止通过 `naive-ui/...` 深层路径或 namespace import 使用 `createDiscreteApi`，否则审计会 fail closed。
+消费项目已有的应用包装函数或全局变量可以继续保留，只要它们底层最终使用上述裸入口的 named import；插件不要求各系统采用统一的应用封装。禁止通过 `naive-ui/...` 深层路径或 namespace import 使用 `createDiscreteApi`，否则审计会 fail closed。
 
 ## Selector 迁移
 
@@ -331,13 +328,13 @@ document.querySelector(naiveSelector("button"));
 }
 ```
 
-不要在项目源码中保留字面量 `.n-*`。Vue scoped 样式继续依赖 Vue 的 scoped 属性；未 scoped 的项目和组件库自定义 selector 会增加项目 namespace。
+不要在项目源码中保留字面量 `.n-*`。Vue scoped 样式继续依赖 Vue 的 scoped 属性；未 scoped 的项目自定义 selector 会增加项目 namespace。
 
 ## 项目源码审计设计
 
-项目源码审计的首要目的不是自动修复代码，而是让开发者显式知道某段业务逻辑依赖了 Naive UI 的内部 DOM 或 class。Naive UI 的默认 `.n-*` 不是稳定的跨应用契约；在多版本微应用共享同一 document 时，直接使用默认前缀会绕过版本隔离。
+项目源码审计的首要目的不是自动修复代码，而是让开发者显式知道某段应用逻辑依赖了 Naive UI 的内部 DOM 或 class。Naive UI 的默认 `.n-*` 不是稳定的跨应用契约；在多版本微应用共享同一 document 时，直接使用默认前缀会绕过版本隔离。
 
-业务代码应显式表达这种依赖：
+应用代码应显式表达这种依赖：
 
 ```ts
 document.querySelector(naiveSelector("button"));
@@ -346,9 +343,9 @@ element.classList.add(naiveClassName("button--disabled"));
 
 开发者不需要手写 `2.44.1` 或 `n-v2-44-1`。helper 会从插件 runtime 获取当前消费项目实际版本的前缀。显式 helper 的作用是暴露“这里依赖 Naive UI 内部结构”，便于代码审查、升级检索和故障定位，同时隐藏具体版本编码。
 
-### 为什么不在正常构建中自动改写所有业务代码
+### 为什么不在正常构建中自动改写所有应用代码
 
-本插件并非完全不使用 AST：项目 `createDiscreteApi` 和一次性 `migrate` 都使用结构化解析。没有对项目 DOM class/selector 做日常自动改写，是因为即使 AST 能识别字符串，也不一定能证明它的业务含义：
+本插件并非完全不使用 AST：项目 `createDiscreteApi` 和一次性 `migrate` 都使用结构化解析。没有对项目 DOM class/selector 做日常自动改写，是因为即使 AST 能识别字符串，也不一定能证明它的应用含义：
 
 ```ts
 classList.add("n-input"); // class token，应使用 naiveClassName
@@ -358,11 +355,11 @@ inject("n-form"); // provide key，不能改
 message.info("n-input"); // 普通文本，不能改
 ```
 
-复合 selector、自定义封装函数、别名调用、模板字符串和字符串拼接还需要更多上下文。若插件只改写已知模式并静默放过未知模式，会造成已经全部处理的错误信心；若对未知模式全部失败，开发者仍需显式处理。正常构建静默修改业务源码还会隐藏版本敏感依赖，并增加 Vue SFC、TSX、source map 和插件顺序风险。
+复合 selector、自定义封装函数、别名调用、模板字符串和字符串拼接还需要更多上下文。若插件只改写已知模式并静默放过未知模式，会造成已经全部处理的错误信心；若对未知模式全部失败，开发者仍需显式处理。正常构建静默修改应用源码还会隐藏版本敏感依赖，并增加 Vue SFC、TSX、source map 和插件顺序风险。
 
 因此当前边界是：
 
-- 项目业务源码：显式 helper，并由 audit 阻止重新引入默认前缀；
+- 项目应用源码：显式 helper，并由 audit 阻止重新引入默认前缀；
 - `migrate --write`：只在开发者主动执行时转换可证明安全的简单模式，修改结果可以审查；
 - CSS/Less：使用 PostCSS selector parser 进行结构化转换。
 
@@ -388,7 +385,7 @@ const documentation = "n-button";
 const regexExample = /\.n-button/;
 ```
 
-项目自行定义但恰好使用 `n-*` 命名的 class 也会被视为 Naive UI class。硬编码 `.n-v2-44-1-*` 同样会被拒绝，因为业务源码不应固定复制某个版本前缀。遇到误判时应人工确认该行；如果它不是运行时依赖，应调整示例、注释或命名，而不是长期关闭生产审计。
+项目自行定义但恰好使用 `n-*` 命名的 class 也会被视为 Naive UI class。硬编码 `.n-v2-44-1-*` 同样会被拒绝，因为应用源码不应固定复制某个版本前缀。遇到误判时应人工确认该行；如果它不是运行时依赖，应调整示例、注释或命名，而不是长期关闭生产审计。
 
 ### 可能漏判
 
@@ -407,10 +404,10 @@ element.classList.add(classNameFromServer);
 
 ```text
 显式 helper + 项目源码 audit
-+ 生产 bundle 校验 + 运行时业务验证
++ 生产 bundle 校验 + 运行时应用验证
 ```
 
-后续可以将项目 TypeScript/Vue script 的“识别和报告”升级为 AST，减少注释和普通字符串造成的误判，并覆盖更多 DOM API。即使升级为 AST，也建议保留显式 helper，不在正常构建中静默自动改写业务代码。
+后续可以将项目 TypeScript/Vue script 的“识别和报告”升级为 AST，减少注释和普通字符串造成的误判，并覆盖更多 DOM API。即使升级为 AST，也建议保留显式 helper，不在正常构建中静默自动改写应用代码。
 
 ## CLI
 
@@ -419,10 +416,10 @@ CLI 不是应用运行时依赖，不执行 CLI 也不会影响 Vite 插件工�
 本 package 的 `package.json` 通过 `bin` 字段声明了 `naive-style-isolation`。安装依赖时，包管理器会在消费项目的 `node_modules/.bin` 中创建对应命令入口，因此 Yarn 1 可以直接执行：
 
 ```sh
-yarn naive-style-isolation doctor --namespace billing-expense-app
-yarn naive-style-isolation migrate --namespace billing-expense-app
-yarn naive-style-isolation migrate --namespace billing-expense-app --write
-yarn naive-style-isolation audit --namespace billing-expense-app --report artifacts/naive-style-isolation-audit.json
+yarn naive-style-isolation doctor --namespace example-app
+yarn naive-style-isolation migrate --namespace example-app
+yarn naive-style-isolation migrate --namespace example-app --write
+yarn naive-style-isolation audit --namespace example-app --report artifacts/naive-style-isolation-audit.json
 ```
 
 这个过程不会修改消费项目根 `package.json`，也不会自动向 `scripts` 写入任何命令。上面的内容是直接调用 package bin 的示例。如果团队希望固定命令名称，需要自行在消费项目根 `package.json` 中增加 scripts，例如：
@@ -430,8 +427,8 @@ yarn naive-style-isolation audit --namespace billing-expense-app --report artifa
 ```json
 {
   "scripts": {
-    "naive:doctor": "naive-style-isolation doctor --namespace billing-expense-app",
-    "naive:audit": "naive-style-isolation audit --namespace billing-expense-app --report artifacts/naive-style-isolation-audit.json"
+    "naive:doctor": "naive-style-isolation doctor --namespace example-app",
+    "naive:audit": "naive-style-isolation audit --namespace example-app --report artifacts/naive-style-isolation-audit.json"
   }
 }
 ```
@@ -453,26 +450,26 @@ yarn naive-style-isolation audit --namespace billing-expense-app --report artifa
 不带 `--write` 时是 dry-run，只列出将要修改的文件，不写入任何内容：
 
 ```sh
-yarn naive-style-isolation migrate --namespace billing-expense-app
+yarn naive-style-isolation migrate --namespace example-app
 ```
 
 带 `--write` 时，只会扫描并写入消费项目 `src` 下的 `.ts`、`.tsx`、`.vue`、`.less` 文件：
 
 ```sh
-yarn naive-style-isolation migrate --namespace billing-expense-app --write
+yarn naive-style-isolation migrate --namespace example-app --write
 ```
 
 它会执行以下三类修改。
 
 1. 标准 Vue ConfigProvider
 
-删除根 `<n-config-provider>` 上由 package 接管的 `namespace`、`:cls-prefix`、`:inline-theme-disabled`，增加 runtime props 绑定，并在 `<script setup>` 中补充 import。其他业务属性保持不变。
+删除根 `<n-config-provider>` 上由 package 接管的 `namespace`、`:cls-prefix`、`:inline-theme-disabled`，增加 runtime props 绑定，并在 `<script setup>` 中补充 import。其他应用属性保持不变。
 
 修改前：
 
 ```vue
 <n-config-provider
-  namespace="billing-expense-app"
+  namespace="example-app"
   :cls-prefix="clsPrefix"
   :inline-theme-disabled="false"
   :theme-overrides="themeOverrides"
@@ -536,11 +533,11 @@ document.querySelector(naiveSelector("button"));
 
 ### audit 做什么
 
-`audit` 默认只读，复用生产插件的组件库转换、未知模式、依赖和 bundle 不变量检查。只有传入 `--report` 时才会写入指定的 JSON 报告。它适合首次接入、组件库升级和 CI：
+`audit` 默认只读，检查项目 Naive UI selector、离散 API 导入、runtime 依赖和已有构建产物。只有传入 `--report` 时才会写入指定的 JSON 报告。它适合首次接入、Naive UI 升级和 CI：
 
 ```sh
 yarn naive-style-isolation audit \
-  --namespace billing-expense-app \
+  --namespace example-app \
   --report artifacts/naive-style-isolation-audit.json
 ```
 
@@ -551,8 +548,8 @@ yarn naive-style-isolation audit \
 首次接入或升级后至少执行：
 
 ```sh
-yarn naive-style-isolation doctor --namespace billing-expense-app
-yarn naive-style-isolation audit --namespace billing-expense-app --report artifacts/naive-style-isolation-audit.json
+yarn naive-style-isolation doctor --namespace example-app
+yarn naive-style-isolation audit --namespace example-app --report artifacts/naive-style-isolation-audit.json
 yarn build
 ```
 
@@ -564,33 +561,30 @@ Package 维护者在本目录执行：
 `^22.12.0 || ^24.0.0 || >=26.0.0`。上方兼容表描述的是消费项目运行预编译插件的范围。
 
 ```sh
-yarn test
-yarn typecheck
-yarn build
-yarn check:dist
-yarn archive
+npm ci
+npm run check
+npm run archive
 ```
 
-`archive` 会先执行测试、类型检查和 dist 新鲜度检查，再重新构建、复查 dist、生成 zip，并解压该 zip 完成一次真实 `file:` 安装和 Vite smoke build。任一前置条件失败时不会保留新的分享包。
+`archive` 会先执行测试、类型检查和 dist 新鲜度检查，再重新构建、复查 dist、生成 zip，并验证解压目录打包后的独立安装和 Vite 构建。任一前置条件失败时不会保留新的归档包。
 
-归档文件名来自 package `name` 和 `version`。脚本不会自动递增版本；如果同版本 zip 或 `.sha256` 已存在，会直接报错而不是覆盖。每次生成新的团队分享包前，先升级 package `version` 并更新 `CHANGELOG.md`。
+归档文件名来自 package `name` 和 `version`。脚本不会自动递增版本；如果同版本 zip 或 `.sha256` 已存在，会直接报错而不是覆盖。每次生成新的归档包前，先升级 package `version` 并更新 `CHANGELOG.md`。
 
 ## 审计报告
 
 生产构建默认生成 `naive-style-isolation-audit.json`。报告包含 schema 版本、Naive UI 版本、class prefix、namespace、转换位置、未知模式的文件/行列/类别/处理建议、runtime 证据、现有 bundle 检查状态和构建失败原因。
 
-
 ## 升级与缓存
 
-每次对外分享必须递增 package version，并更新 `CHANGELOG.md`。升级时完整替换源码 package 目录，不要只覆盖 `src` 或 `dist`；重新安装后执行 doctor、audit、package 测试和所有生产构建，并核对安装后的版本。
+升级 npm 依赖版本并同步锁文件，重新安装后执行 audit 和所有生产构建，并核对安装后的版本。源码开发者在独立仓库运行测试与类型检查。
 
 Yarn 1 可能在版本号不变时继续使用旧 `file:` 缓存。若安装内容与复制目录不一致，只删除项目中已安装的 `vite-plugin-naive-style-isolation` 和对应 Yarn 缓存，再执行 `yarn install --force`。不要清理无关项目或全局目录。
 
-从旧源码包迁移时，把依赖值从 `file:...` 改为 npm 版本，Vite、runtime、业务 import 和 CLI 命令都不修改。
+从旧源码包迁移时，把依赖值从 `file:...` 改为 npm 版本，Vite、runtime、应用 import 和 CLI 命令都不修改。
 
 ## 回滚
 
-恢复上一版本的完整源码 package 目录及匹配的 `file:` 依赖快照，重新安装依赖并构建全部应用入口。由于 provider、selector、离散 API import 改写和审计必须同时切换，本 package 不提供局部关闭开关。
+恢复上一版本的 npm 依赖及匹配的锁文件，重新安装依赖并构建所有应用入口。Provider、selector、离散 API 导入和审计应使用同一版本。
 
 ## 常见问题
 
@@ -604,7 +598,7 @@ Yarn 1 可能在版本号不变时继续使用旧 `file:` 缓存。若安装内�
 
 ## 已知边界
 
-本方案隔离 Naive UI CSSR 组件样式和受控自定义 selector，不承诺整个共享文档的全局 CSS 隔离，也不引入 Shadow DOM、iframe 或 qiankun strict style isolation。
+本方案隔离 Naive UI CSSR 组件样式和项目自定义 selector，不承诺整个共享文档的全局 CSS 隔离，也不引入 Shadow DOM、iframe 或 qiankun strict style isolation。
 
 `n-global` 和未带前缀的动画名是已知共享残余。版本化 CSSR style 在应用卸载后保留到当前 document 生命周期结束，以便同版本应用复用；package 不删除样式，也不实现引用计数。
 
@@ -619,7 +613,7 @@ import vue from "@vitejs/plugin-vue";
 import naiveStyleIsolation from "vite-plugin-naive-style-isolation";
 
 export default defineConfig({
-  plugins: [naiveStyleIsolation({ namespace: "billing-expense-app" }), vue()],
+  plugins: [naiveStyleIsolation({ namespace: "example-app" }), vue()],
 });
 ```
 
@@ -642,9 +636,9 @@ const providerProps = withNaiveConfigProviderProps();
 
 完成最小接入后，继续运行 doctor、迁移剩余 selector、运行独立 audit，并执行真实生产构建。
 
-## 第三方组件库边界
+## 处理范围
 
-插件只转换消费项目 `src` 下的 CSS 和具名 `createDiscreteApi` 导入，不转换任何第三方组件库的 JavaScript、静态 class 或 CSS，也不修改其依赖预构建配置。第三方组件库需要自行支持消费项目的 Naive UI 前缀和 namespace。最终生产 bundle 仍执行通用隔离检查，默认 selector 残留可能阻止构建。
+插件处理 Naive UI 的版本前缀、Provider 配置、项目 `src` 下的 Naive UI CSS selector 和具名 `createDiscreteApi` 导入。依赖包自行负责与该前缀和 namespace 的兼容性。最终生产 bundle 检查 Naive UI selector 和 runtime 的隔离一致性。
 
 ## 自动发布
 
