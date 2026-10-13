@@ -29,8 +29,24 @@ export const rewriteNaiveSelector = (selector, clsPrefix) => {
     });
     return { selector: processor.processSync(selector), classes };
 };
-export const createNaiveSelectorPostcssPlugin = ({ clsPrefix, namespace, audit, }) => ({
+export const createNaiveSelectorPostcssPlugin = ({ clsPrefix, namespace, audit, auditSource, }) => ({
     postcssPlugin: "naive-ui-versioned-selector",
+    prepare() {
+        if (!auditSource)
+            return {};
+        const checked = new Set();
+        return {
+            Once(root) {
+                root.walk(node => {
+                    const file = node.source?.input.file;
+                    if (!file || checked.has(file))
+                        return;
+                    checked.add(file);
+                    auditSource(file);
+                });
+            },
+        };
+    },
     Rule(rule) {
         const fileName = rule.source?.input.file ?? "";
         if (!isAllowedSource(fileName))

@@ -5,4 +5,4 @@ export interface NaiveStyleIsolationOptions {
     strict?: boolean;
     auditReport?: string;
 }
-export default function naiveStyleIsolation(options: NaiveStyleIsolationOptions): Plugin;
+export default function naiveStyleIsolation(options: NaiveStyleIsolationOptions): Plugin[];

@@ -16,7 +16,7 @@ describe("Vite plugin public interface", () => {
   });
 
   it("adds isolation while preserving the consumer Vite configuration", async () => {
-    const plugin = naiveStyleIsolation({
+    const [plugin] = naiveStyleIsolation({
       namespace: "consumer-app",
       root: process.cwd(),
       strict: false,
@@ -73,7 +73,7 @@ describe("Vite plugin public interface", () => {
     );
     expect(merged.build?.sourcemap).toBe(true);
 
-    const duplicate = naiveStyleIsolation({
+    const [duplicate] = naiveStyleIsolation({
       namespace: "consumer-app",
       root: process.cwd(),
       strict: false,
@@ -84,7 +84,7 @@ describe("Vite plugin public interface", () => {
   });
 
   it("rewrites only createDiscreteApi imports and leaves normal Naive UI imports optimizable", () => {
-    const plugin = naiveStyleIsolation({
+    const [plugin] = naiveStyleIsolation({
       namespace: "consumer-app",
       root: process.cwd(),
       strict: false,
@@ -119,7 +119,7 @@ describe("Vite plugin public interface", () => {
   });
 
   it("leaves third-party JavaScript and optimizer configuration unchanged", async () => {
-    const plugin = naiveStyleIsolation({
+    const [plugin] = naiveStyleIsolation({
       namespace: "consumer-app",
       root: process.cwd(),
       strict: false,
@@ -182,7 +182,7 @@ describe("Vite plugin public interface", () => {
     write("src/safe.ts", "export const safe = true;\n");
 
     try {
-      const plugin = naiveStyleIsolation({
+      const [plugin] = naiveStyleIsolation({
         namespace: "no-library-fixture",
         root,
       });
@@ -210,7 +210,7 @@ describe("Vite plugin public interface", () => {
     write("src/unsafe.less", ".n-input { color: red; }\n");
 
     try {
-      const plugin = naiveStyleIsolation({
+      const [plugin] = naiveStyleIsolation({
         namespace: "strict-fixture",
         root,
         strict: false,

@@ -11,6 +11,7 @@ interface NaiveSelectorPostcssOptions {
   clsPrefix: string;
   namespace: string;
   audit: NaiveStyleIsolationAudit;
+  auditSource?: (file: string) => void;
 }
 
 const DEFAULT_NAIVE_CLASS_PATTERN = /^n-(?!global$)(.+)$/;
@@ -50,8 +51,23 @@ export const createNaiveSelectorPostcssPlugin = ({
   clsPrefix,
   namespace,
   audit,
+  auditSource,
 }: NaiveSelectorPostcssOptions): PostcssPlugin => ({
   postcssPlugin: "naive-ui-versioned-selector",
+  prepare() {
+    if (!auditSource) return {};
+    const checked = new Set<string>();
+    return {
+      Once(root) {
+        root.walk(node => {
+          const file = node.source?.input.file;
+          if (!file || checked.has(file)) return;
+          checked.add(file);
+          auditSource(file);
+        });
+      },
+    };
+  },
   Rule(rule) {
     const fileName = rule.source?.input.file ?? "";
     if (!isAllowedSource(fileName)) return;

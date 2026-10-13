@@ -1,7 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const SKIPPED_DIRECTORIES = new Set([".git", "dist", "node_modules", "coverage", ".vitest"]);
+const SKIPPED_DIRECTORIES = new Set([".git", "dist", "node_modules", "coverage", ".vitest", "external"]);
+const SOURCE_EXTENSIONS = new Set([".vue", ".less", ".css", ".scss", ".ts", ".tsx"]);
+
+export const isProductionSource = (file: string, sourceRoot: string) => {
+  const relative = path.relative(sourceRoot, file).replaceAll("\\", "/");
+  const segments = relative.split("/");
+  return relative !== ".." && !relative.startsWith("../") && !path.isAbsolute(relative) &&
+    !segments.slice(0, -1).some(segment => SKIPPED_DIRECTORIES.has(segment)) &&
+    SOURCE_EXTENSIONS.has(path.extname(file)) &&
+    !/\.(?:test|spec)\.[^.]+$/.test(file) && !file.endsWith(".d.ts");
+};
 
 export const walkFiles = (directory: string, extensions?: Set<string>): string[] => {
   if (!fs.existsSync(directory)) return [];
@@ -9,7 +19,7 @@ export const walkFiles = (directory: string, extensions?: Set<string>): string[]
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const file = path.join(directory, entry.name);
     if (entry.isDirectory()) {
-      if (!SKIPPED_DIRECTORIES.has(entry.name) && entry.name !== "external") {
+      if (!SKIPPED_DIRECTORIES.has(entry.name)) {
         files.push(...walkFiles(file, extensions));
       }
       continue;
@@ -20,8 +30,8 @@ export const walkFiles = (directory: string, extensions?: Set<string>): string[]
 };
 
 export const readProductionSources = (directory: string, projectRoot: string) =>
-  walkFiles(directory, new Set([".vue", ".less", ".css", ".scss", ".ts", ".tsx"]))
-    .filter(file => !/\.(?:test|spec)\.[^.]+$/.test(file) && !file.endsWith(".d.ts"))
+  walkFiles(directory, SOURCE_EXTENSIONS)
+    .filter(file => isProductionSource(file, directory))
     .map(file => ({
       file: path.relative(projectRoot, file).replaceAll("\\", "/"),
       source: fs.readFileSync(file, "utf8"),

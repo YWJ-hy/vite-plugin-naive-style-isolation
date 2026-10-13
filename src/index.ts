@@ -6,6 +6,7 @@ import { createNaiveIsolationPlugin } from "./internal/vite-plugin.js";
 import { readResolvedNaiveUiVersion } from "./internal/version.js";
 import { encodeNaiveUiVersion } from "./internal/shared.js";
 import { assertNamespace } from "./internal/config.js";
+import { createDevSourceAudit } from "./internal/dev-source-audit.js";
 
 export interface NaiveStyleIsolationOptions {
   namespace: string;
@@ -43,7 +44,7 @@ const mergePostcssPlugins = (postcss: unknown) => {
   return config;
 };
 
-export default function naiveStyleIsolation(options: NaiveStyleIsolationOptions): Plugin {
+export default function naiveStyleIsolation(options: NaiveStyleIsolationOptions): Plugin[] {
   assertNamespace(options.namespace);
   if (
     options.auditReport &&
@@ -64,8 +65,9 @@ export default function naiveStyleIsolation(options: NaiveStyleIsolationOptions)
     auditReport: options.auditReport ?? "naive-style-isolation-audit.json",
   };
   const adapter = createNaiveIsolationPlugin(adapterOptions);
+  const devAudit = createDevSourceAudit(root);
 
-  return {
+  const plugin: Plugin = {
     ...adapter,
     name: "vite-plugin-naive-style-isolation",
     enforce: "pre",
@@ -109,6 +111,9 @@ export default function naiveStyleIsolation(options: NaiveStyleIsolationOptions)
                 clsPrefix,
                 namespace: options.namespace,
                 audit,
+                auditSource: env.command === "serve" && (options.strict ?? true)
+                  ? devAudit.auditFile
+                  : undefined,
               }),
             ],
           },
@@ -122,4 +127,5 @@ export default function naiveStyleIsolation(options: NaiveStyleIsolationOptions)
       } as Omit<UserConfig, "plugins">;
     },
   };
+  return options.strict === false ? [plugin] : [plugin, devAudit.plugin];
 }

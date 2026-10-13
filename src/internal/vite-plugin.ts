@@ -10,7 +10,7 @@ import {
   assertNoUnknownNaivePatterns,
   transformProjectNaiveDiscreteApiImports,
 } from "./js-transform.js";
-import { readProductionSources } from "./file-system.js";
+import { isProductionSource, readProductionSources } from "./file-system.js";
 import { createNaiveDiscreteApiModuleSource } from "./discrete-api-module.js";
 import { NAIVE_DISCRETE_API_MODULE_ID, RESOLVED_NAIVE_DISCRETE_API_MODULE_ID } from "./ids.js";
 import { mergeNaiveStyleIsolationAudit, type NaiveStyleIsolationAudit } from "./types.js";
@@ -144,6 +144,7 @@ export const createNaiveIsolationPlugin = (options: IsolationOptions): Plugin =>
   const expectedVersion = readResolvedNaiveUiVersion(options.root).version;
   const runtimeModules = new Map<string, NaiveUiRuntimeModule>();
   let failureReportPath: string | undefined;
+  let development = false;
 
   const report = (failure?: string, runtimes = [...runtimeModules.values()]) =>
     createAuditReport({
@@ -167,6 +168,7 @@ export const createNaiveIsolationPlugin = (options: IsolationOptions): Plugin =>
     name: "naive-ui-versioned-style-isolation",
     enforce: "pre",
     configResolved(config: ResolvedConfig) {
+      development = config.command === "serve";
       const output = Array.isArray(config.build.rollupOptions.output)
         ? config.build.rollupOptions.output[0]
         : config.build.rollupOptions.output;
@@ -185,6 +187,7 @@ export const createNaiveIsolationPlugin = (options: IsolationOptions): Plugin =>
       return createNaiveDiscreteApiModuleSource();
     },
     async buildStart() {
+      if (development) return;
       try {
         assertExplicitNaiveSelectors(
           readProductionSources(path.join(options.root, "src"), options.root),
@@ -195,6 +198,19 @@ export const createNaiveIsolationPlugin = (options: IsolationOptions): Plugin =>
       }
     },
     transform(code, id) {
+      if (development && options.explicitProjectSelectors) {
+        const file = id.split("?")[0];
+        if (isProductionSource(file, path.join(options.root, "src"))) {
+          // Vue subrequests may already contain generated selectors. Audit the
+          // original SFC so style-only HMR also checks current source and line numbers.
+          const source = file.endsWith(".vue") && id.includes("?")
+            ? fs.readFileSync(file, "utf8")
+            : code;
+          assertExplicitNaiveSelectors([
+            { file: normalizePath(path.relative(options.root, file)), source },
+          ], true);
+        }
+      }
       const projectModule = isProjectModule(id, options.root);
       if (!projectModule || !code.includes("createDiscreteApi")) return;
       const result = transformProjectNaiveDiscreteApiImports(code, { id });

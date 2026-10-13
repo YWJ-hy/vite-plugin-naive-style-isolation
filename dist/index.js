@@ -5,6 +5,7 @@ import { createNaiveIsolationPlugin } from "./internal/vite-plugin.js";
 import { readResolvedNaiveUiVersion } from "./internal/version.js";
 import { encodeNaiveUiVersion } from "./internal/shared.js";
 import { assertNamespace } from "./internal/config.js";
+import { createDevSourceAudit } from "./internal/dev-source-audit.js";
 const mergeLessAdditionalData = (current, injected) => {
     if (current === undefined)
         return injected;
@@ -50,7 +51,8 @@ export default function naiveStyleIsolation(options) {
         auditReport: options.auditReport ?? "naive-style-isolation-audit.json",
     };
     const adapter = createNaiveIsolationPlugin(adapterOptions);
-    return {
+    const devAudit = createDevSourceAudit(root);
+    const plugin = {
         ...adapter,
         name: "vite-plugin-naive-style-isolation",
         enforce: "pre",
@@ -85,6 +87,9 @@ export default function naiveStyleIsolation(options) {
                                 clsPrefix,
                                 namespace: options.namespace,
                                 audit,
+                                auditSource: env.command === "serve" && (options.strict ?? true)
+                                    ? devAudit.auditFile
+                                    : undefined,
                             }),
                         ],
                     },
@@ -98,4 +103,5 @@ export default function naiveStyleIsolation(options) {
             };
         },
     };
+    return options.strict === false ? [plugin] : [plugin, devAudit.plugin];
 }
