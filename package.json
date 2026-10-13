@@ -4,7 +4,7 @@
   "description": "Version-aware Naive UI style isolation for Vue and Vite micro applications",
   "license": "ISC",
   "bin": {
-    "naive-style-isolation": "./dist/cli.js"
+    "naive-style-isolation": "dist/cli.js"
   },
   "files": [
     "dist",

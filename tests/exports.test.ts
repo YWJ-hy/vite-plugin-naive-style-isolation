@@ -23,7 +23,7 @@ describe("package exports", () => {
       name: "vite-plugin-naive-style-isolation",
       version: expect.stringMatching(/^\d+\.\d+\.\d+$/),
       publishConfig: { access: "public", registry: "https://registry.npmjs.org/" },
-      bin: { "naive-style-isolation": "./dist/cli.js" },
+      bin: { "naive-style-isolation": "dist/cli.js" },
     });
     expect(fs.existsSync(path.join(packageRoot, "dist/cli.js"))).toBe(true);
   });
